@@ -1,0 +1,108 @@
+import pygame
+import sys
+
+# 初始化
+pygame.init()
+
+# 常數設定
+BOARD_SIZE = 19  # 19x19標準圍棋棋盤
+GRID_SIZE = 30
+MARGIN = 40
+STONE_RADIUS = 13
+WIDTH = BOARD_SIZE * GRID_SIZE + 2 * MARGIN
+HEIGHT = BOARD_SIZE * GRID_SIZE + 2 * MARGIN
+
+# 顏色
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+BOARD_COLOR = (220, 179, 92)
+LINE_COLOR = (0, 0, 0)
+HIGHLIGHT = (255, 0, 0)
+
+# 創建遊戲窗口
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("圍棋遊戲")
+
+# 棋盤狀態 (0=空, 1=黑, 2=白)
+board = [[0 for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
+current_player = 1  # 1=黑棋, 2=白棋
+
+def draw_board():
+    """繪製棋盤"""
+    screen.fill(BOARD_COLOR)
+    
+    # 繪製棋盤線
+    for i in range(BOARD_SIZE):
+        # 橫線
+        pygame.draw.line(screen, LINE_COLOR, 
+                         (MARGIN, MARGIN + i * GRID_SIZE), 
+                         (WIDTH - MARGIN, MARGIN + i * GRID_SIZE), 1)
+        # 豎線
+        pygame.draw.line(screen, LINE_COLOR, 
+                         (MARGIN + i * GRID_SIZE, MARGIN), 
+                         (MARGIN + i * GRID_SIZE, HEIGHT - MARGIN), 1)
+    
+    # 繪製星位
+    star_points = [3, 9, 15] if BOARD_SIZE == 19 else [2, 6] if BOARD_SIZE == 9 else []
+    for x in star_points:
+        for y in star_points:
+            pygame.draw.circle(screen, BLACK, 
+                              (MARGIN + x * GRID_SIZE, MARGIN + y * GRID_SIZE), 4)
+    
+    # 繪製棋子
+    for y in range(BOARD_SIZE):
+        for x in range(BOARD_SIZE):
+            if board[y][x] == 1:  # 黑棋
+                pygame.draw.circle(screen, BLACK, 
+                                  (MARGIN + x * GRID_SIZE, MARGIN + y * GRID_SIZE), 
+                                  STONE_RADIUS)
+            elif board[y][x] == 2:  # 白棋
+                pygame.draw.circle(screen, WHITE, 
+                                  (MARGIN + x * GRID_SIZE, MARGIN + y * GRID_SIZE), 
+                                  STONE_RADIUS)
+                pygame.draw.circle(screen, BLACK, 
+                                  (MARGIN + x * GRID_SIZE, MARGIN + y * GRID_SIZE), 
+                                  STONE_RADIUS, 1)
+
+def get_board_position(mouse_pos):
+    """將鼠標位置轉換為棋盤坐標"""
+    x, y = mouse_pos
+    board_x = round((x - MARGIN) / GRID_SIZE)
+    board_y = round((y - MARGIN) / GRID_SIZE)
+    
+    if 0 <= board_x < BOARD_SIZE and 0 <= board_y < BOARD_SIZE:
+        return board_x, board_y
+    return None
+
+def is_valid_move(x, y):
+    """檢查落子是否有效"""
+    if board[y][x] != 0:  # 已有棋子
+        return False
+    # 這裡應該添加圍棋規則檢查(氣、打劫等)
+    return True
+
+def place_stone(x, y):
+    """放置棋子"""
+    global current_player
+    if is_valid_move(x, y):
+        board[y][x] = current_player
+        current_player = 3 - current_player  # 切換玩家 (1<->2)
+
+def main():
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # 左鍵點擊
+                    pos = get_board_position(event.pos)
+                    if pos:
+                        x, y = pos
+                        place_stone(x, y)
+        
+        draw_board()
+        pygame.display.flip()
+
+if __name__ == "__main__":
+    main()
